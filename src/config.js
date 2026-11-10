@@ -67,7 +67,7 @@ export const CFG = {
 
   dollars: {
     min: 3, max: 4, // how many wash up per round
-    bonus: 300, // points, banked straight away
+    bonus: 750, // points, banked straight away (see tools/bots.mjs for typical scores)
     firstAt: 8, // s into the round before the first can appear
     lastAt: 22, // s before the end after which none appear
     zMin: 0.24, // band of beach height they can land in: above the resting

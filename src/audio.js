@@ -44,10 +44,20 @@ export class Sound {
     this.hiss.g.gain.setTargetAtTime(0.012 + 0.16 * s, t, 0.4);
   }
 
+  applyGain() {
+    if (this.ctx) this.master.gain.setTargetAtTime(this.muted || this.ducked ? 0 : 0.7, this.ctx.currentTime, 0.05);
+  }
+
   toggleMute() {
     this.muted = !this.muted;
-    if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime, 0.05);
+    this.applyGain();
     return this.muted;
+  }
+
+  // silence while the game is paused
+  duck(on) {
+    this.ducked = on;
+    this.applyGain();
   }
 
   note(freq, at, dur, type = 'triangle', vol = 0.16) {

@@ -50,6 +50,9 @@
   #count.pop { animation: pop .9s ease-out forwards; }
   @keyframes pulse { 50% { opacity: .45; } }
   @keyframes pop { 0% { transform: scale(1.5); opacity: 0; } 15% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(.9); opacity: 0; } }
+  #pause { position: absolute; inset: 0; display: none; place-items: center; background: rgba(20,50,58,.35); }
+  #pause div { font-size: 6cqw; text-align: center; text-shadow: 0 .5cqw 0 rgba(40,28,20,.45); }
+  #pause small { display: block; font-size: 1.7cqw; opacity: .9; margin-top: .6cqw; }
   #fade { position: absolute; inset: 0; background: #fff7e0; opacity: 0; transition: opacity .25s; pointer-events: none; }
   #debug { position: absolute; left: 1.6cqw; bottom: 1.2cqw; font: 1.1cqw ui-monospace, monospace; opacity: .85; white-space: pre; display: none; }
   #hint { position: absolute; right: 1.6cqw; bottom: 1.2cqw; font-size: 1.1cqw; opacity: .7; }
@@ -64,8 +67,9 @@
     <div class="card" id="c1"><div class="who">PLAYER 2</div><div class="score">0</div><div class="sub">&nbsp;</div></div>
     <div id="timer">90</div>
     <div id="center"><div id="panel"></div><div id="count"></div></div>
+    <div id="pause"><div>PAUSED<small>Esc to resume</small></div></div>
     <div id="debug"></div>
-    <div id="hint">M mute · ` (backtick) performance readout</div>
+    <div id="hint">M mute · Esc pause</div>
   </div>
   <div id="fade"></div>
 </div>

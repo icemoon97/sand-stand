@@ -53,13 +53,24 @@ function readInputs() {
     inputs[i].y = (keys.has(b.down) ? 1 : 0) - (keys.has(b.up) ? 1 : 0);
   }
 }
+const silent = params.has('mute'); // ?mute: never start audio (automated test tabs)
 let debugOn = params.has('debug');
+let paused = false;
+function setPaused(on) {
+  paused = on;
+  $('pause').style.display = on ? 'grid' : 'none';
+  sound.duck(on);
+}
 window.addEventListener('keydown', (e) => {
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
   if (e.repeat) return;
-  sound.init();
+  if (!silent) sound.init();
   keys.add(e.code);
-  if (e.code === 'Space' || e.code === 'Enter') {
+  if (e.code === 'Escape') {
+    if (paused || game.phase === 'countdown' || game.phase === 'play') setPaused(!paused);
+  } else if (paused) {
+    // everything else waits
+  } else if (e.code === 'Space' || e.code === 'Enter') {
     if (game.phase === 'title' || game.phase === 'results') startRound();
   } else if (e.code === 'KeyM') sound.toggleMute();
   else if (e.code === 'Backquote') { debugOn = !debugOn; $('debug').style.display = debugOn ? 'block' : 'none'; }
@@ -182,7 +193,7 @@ function updateHud(dt) {
 // ---- main loop: fixed 60 Hz ticks, two 120 Hz water steps per tick
 const TICK = CFG.game.tick;
 const SUB = Math.round(TICK / CFG.sim.dt);
-let last = performance.now(), acc = 0, simMs = 0, fps = 60;
+let last = performance.now(), acc = 0, simMs = 0, fps = 60, clock = 0;
 
 function tick() {
   const t0 = performance.now();
@@ -196,15 +207,17 @@ function tick() {
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  acc += dt;
+  const step = paused ? 0 : dt; // paused: water, players, timers and effects all hold still
+  acc += step;
+  clock += step;
   let n = 0;
   while (acc >= TICK && n < 4) { tick(); acc -= TICK; n++; }
   if (n === 4) acc = 0;
   handleEvents();
-  renderer.draw(now / 1000);
-  overlay.draw(game, dt, now / 1000);
-  updateHud(dt);
-  sound.setSurf(sim.surf);
+  renderer.draw(clock);
+  overlay.draw(game, step, clock);
+  updateHud(step);
+  if (!paused) sound.setSurf(sim.surf);
   if (dt > 0) fps += (1 / dt - fps) * 0.05;
   if (debugOn) {
     $('debug').textContent = `fps ${fps.toFixed(0)}  sim ${simMs.toFixed(2)} ms/tick  grid ${sim.NX}x${sim.NY}  sea #${sim.seed}  t ${sim.t.toFixed(1)}  surf ${sim.surf.toFixed(2)}`;
@@ -220,6 +233,7 @@ requestAnimationFrame(frame);
 // handy for balance work from the console
 window.sandStand = {
   sim, game, CFG, inputs,
+  get paused() { return paused; },
   // run the game forward without waiting for frames (tests, balance scripts)
   advance(seconds, held) {
     const n = Math.round(seconds / TICK);

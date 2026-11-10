@@ -18,8 +18,9 @@ npm run dev
 Then open http://localhost:5173. No dependencies or build step.
 
 - Player 1: `W A S D` · Player 2: arrow keys
-- `Space` start / play again · `R` restart round · `M` mute · `` ` `` stats
+- `Space` start / play again · `Esc` pause · `R` restart round · `M` mute · `` ` `` performance readout
 - `?seed=123` fixes the sea so a round can be replayed exactly
+- `?mute` never starts audio (use for automated or background test tabs)
 
 ## How it works
 
@@ -38,4 +39,5 @@ npm run runup -- 7 180
 ```
 
 Runs seed 7 headless for 180 simulated seconds and prints how far up the beach each wave reached, plus the cost of
-a simulation step. In the browser console, `sandStand.advance(seconds)` fast-forwards the game.
+a simulation step. `node tools/bots.mjs 10` plays ten rounds with a range of scripted players (`src/bots.js`) and
+prints typical scores per strategy. In the browser console, `sandStand.advance(seconds)` fast-forwards the game.
