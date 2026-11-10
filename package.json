@@ -1,0 +1,9 @@
+{
+  "name": "sand-stand",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "runup": "node tools/runup.mjs"
+  }
+}

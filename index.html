@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sand Stand</title>
+<style>
+  :root { --p1: #ff5a4d; --p2: #7a5cff; --ink: #3b2a1e; }
+  html, body { margin: 0; height: 100%; background: #14323a; overflow: hidden; }
+  body {
+    display: grid; place-items: center;
+    font-family: "Arial Rounded MT Bold", ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+    color: #fff; user-select: none; -webkit-user-select: none;
+  }
+  #stage { position: relative; container-type: size; overflow: hidden; border-radius: 10px; box-shadow: 0 10px 50px rgba(0,0,0,.45); }
+  #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud { position: absolute; inset: 0; pointer-events: none; text-shadow: 0 .25cqw 0 rgba(40,28,20,.55); }
+
+  .card { position: absolute; top: 1.6cqw; padding: .7cqw 1.5cqw .9cqw; border-radius: 1.4cqw;
+          background: rgba(255,250,235,.9); color: var(--ink); text-shadow: none; min-width: 13cqw;
+          box-shadow: 0 .35cqw 0 rgba(60,40,20,.25); transition: transform .12s; }
+  .card.bump { transform: scale(1.09); }
+  .card.wet { background: rgba(200,232,255,.92); }
+  #c0 { left: 1.6cqw; border-left: 1cqw solid var(--p1); }
+  #c1 { right: 1.6cqw; border-right: 1cqw solid var(--p2); text-align: right; }
+  .card .who { font-size: 1.25cqw; letter-spacing: .12em; opacity: .7; }
+  .card .score { font-size: 3.5cqw; line-height: 1; font-variant-numeric: tabular-nums; }
+  .card .sub { font-size: 1.15cqw; opacity: .7; margin-top: .25cqw; font-variant-numeric: tabular-nums; }
+
+  #timer { position: absolute; top: 1.6cqw; left: 50%; transform: translateX(-50%); font-size: 3.6cqw;
+           font-variant-numeric: tabular-nums; padding: .3cqw 1.6cqw; border-radius: 1.4cqw;
+           background: rgba(20,50,58,.45); display: none; }
+  #timer.low { color: #ffe45c; }
+
+  #center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  #panel { padding: 2.4cqw 4cqw 2.6cqw; border-radius: 2.4cqw; background: rgba(255,250,235,.9); color: var(--ink);
+           text-shadow: none; box-shadow: 0 .6cqw 0 rgba(60,40,20,.25); max-width: 62cqw; }
+  #panel h1 { margin: 0; font-size: 7cqw; line-height: 1; letter-spacing: .02em; color: #e5533f; }
+  #panel h1 span { color: #1c8f94; }
+  #panel h2 { margin: 0 0 .6cqw; font-size: 4cqw; }
+  #panel p { margin: 1cqw 0 0; font-size: 1.6cqw; line-height: 1.45; }
+  #panel .keys { display: flex; gap: 3cqw; justify-content: center; margin-top: 1.6cqw; font-size: 1.5cqw; }
+  #panel .keys b { display: block; font-size: 2cqw; }
+  #panel .go { margin-top: 1.8cqw; font-size: 2cqw; animation: pulse 1.2s ease-in-out infinite; }
+  #panel table { margin: 1cqw auto 0; border-collapse: collapse; font-size: 1.7cqw; }
+  #panel td { padding: .25cqw 1.4cqw; font-variant-numeric: tabular-nums; }
+  #panel td.big { font-size: 3cqw; }
+  kbd { background: #fff; border-radius: .5cqw; padding: .1cqw .7cqw; box-shadow: 0 .25cqw 0 rgba(60,40,20,.3); font-family: inherit; }
+  #count { font-size: 16cqw; display: none; text-shadow: 0 .8cqw 0 rgba(40,28,20,.45); }
+  #count.pop { animation: pop .9s ease-out forwards; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  @keyframes pop { 0% { transform: scale(1.5); opacity: 0; } 15% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(.9); opacity: 0; } }
+  #fade { position: absolute; inset: 0; background: #fff7e0; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  #debug { position: absolute; left: 1.6cqw; bottom: 1.2cqw; font: 1.1cqw ui-monospace, monospace; opacity: .85; white-space: pre; display: none; }
+  #hint { position: absolute; right: 1.6cqw; bottom: 1.2cqw; font-size: 1.1cqw; opacity: .7; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+  <div id="hud">
+    <div class="card" id="c0"><div class="who">PLAYER 1</div><div class="score">0</div><div class="sub">&nbsp;</div></div>
+    <div class="card" id="c1"><div class="who">PLAYER 2</div><div class="score">0</div><div class="sub">&nbsp;</div></div>
+    <div id="timer">90</div>
+    <div id="center"><div id="panel"></div><div id="count"></div></div>
+    <div id="debug"></div>
+    <div id="hint">M mute · ` stats</div>
+  </div>
+  <div id="fade"></div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
