@@ -42,6 +42,8 @@ export class Overlay {
       ctx.restore();
     }
 
+    for (const o of game.dollars) this.drawDollar(o, s, time);
+
     for (const p of game.players) this.drawPlayer(p, game, s, time);
 
     // droplets
@@ -70,6 +72,74 @@ export class Overlay {
       ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
       this.label(q.text, q.x * s, (q.y - 2.9 - 2.2 * (1 - (1 - k) * (1 - k))) * s, 0.95 * s * scale, q.color);
       ctx.globalAlpha = 1;
+    }
+  }
+
+  twinkle(x, y, size, alpha) {
+    const ctx = this.ctx;
+    ctx.fillStyle = `rgba(255,255,240,${alpha})`;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2, r = i % 2 ? size * 0.16 : size;
+      ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  drawDollar(o, s, time) {
+    const ctx = this.ctx, r = CFG.dollars.radius * s;
+    const x = o.x * s, y = o.y * s;
+    const appear = Math.min(1, o.age / 0.35);
+    const grow = appear * (1 + 0.35 * Math.sin(Math.min(1, o.age / 0.5) * Math.PI));
+    ctx.save();
+    ctx.translate(x, y);
+    // ring of light when it first appears
+    if (o.age < 0.9) {
+      const k = o.age / 0.9;
+      ctx.strokeStyle = `rgba(255,255,235,${0.9 * (1 - k)})`;
+      ctx.lineWidth = 0.1 * s;
+      ctx.beginPath(); ctx.arc(0, 0, r * (1 + 4 * k), 0, Math.PI * 2); ctx.stroke();
+    }
+    // soft glow so it reads through water and foam
+    const glow = ctx.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 2.6);
+    const pulse = 0.5 + 0.2 * Math.sin(time * 4 + o.spin);
+    glow.addColorStop(0, `rgba(255,252,225,${pulse * appear})`);
+    glow.addColorStop(1, 'rgba(255,252,225,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.6, 0, Math.PI * 2); ctx.fill();
+    // on dry sand: a pulsing halo says "come and get it"
+    if (o.exposed) {
+      const ph = (time * 0.9) % 1;
+      ctx.strokeStyle = `rgba(255,236,150,${0.75 * (1 - ph)})`;
+      ctx.lineWidth = 0.08 * s;
+      ctx.beginPath(); ctx.arc(0, 0, r * (1.2 + 1.6 * ph), 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(70,45,20,0.25)';
+      ctx.beginPath(); ctx.arc(0.07 * s, 0.09 * s, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.rotate(o.spin);
+    ctx.scale(grow, grow);
+    ctx.globalAlpha = o.exposed ? 1 : 0.88;
+    ctx.fillStyle = o.exposed ? '#fbf3e2' : '#eefaf4';
+    ctx.strokeStyle = o.exposed ? 'rgba(150,120,80,0.8)' : 'rgba(90,150,150,0.7)';
+    ctx.lineWidth = 0.05 * s;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // the five-petal flower
+    ctx.fillStyle = o.exposed ? 'rgba(170,135,90,0.75)' : 'rgba(90,150,150,0.6)';
+    for (let i = 0; i < 5; i++) {
+      ctx.save();
+      ctx.rotate((i / 5) * Math.PI * 2);
+      ctx.beginPath(); ctx.ellipse(r * 0.45, 0, r * 0.3, r * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // glints
+    for (let i = 0; i < 3; i++) {
+      const ph = time * (o.exposed ? 1.3 : 2.1) + i * 2.1 + o.spin;
+      const k = Math.max(0, Math.sin(ph));
+      const a = o.spin + i * 2.4 + Math.floor(ph / (Math.PI * 2)) * 1.7;
+      this.twinkle(x + Math.cos(a) * r * 1.25, y + Math.sin(a) * r * 1.25, r * (0.45 + 0.95 * k * k), 0.95 * k * k * k);
     }
   }
 

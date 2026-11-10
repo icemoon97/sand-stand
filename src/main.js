@@ -81,6 +81,7 @@ function showTitle() {
     <h1>SAND <span>STAND</span></h1>
     <p>Stand still on the sand to fill your pot. The closer to the sea and the longer you hold your nerve, the faster it fills.
        Step away to bank it. If the water touches your feet first, the pot is gone.</p>
+    <p>Watch for sand dollars glinting under the waves: first to reach one after the water drains off it gets +${CFG.dollars.bonus}.</p>
     <div class="keys">
       <div style="color:${PLAYER_STYLES[0].color}"><b>Player 1</b><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></div>
       <div style="color:${PLAYER_STYLES[1].color}"><b>Player 2</b><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd></div>
@@ -98,6 +99,7 @@ function showResults() {
     <table>
       ${row('Score', { big: true, v: (p) => p.score.toLocaleString() })}
       ${row('Best single stand', { v: (p) => '+' + p.bestPot.toLocaleString() })}
+      ${row('Sand dollars', { v: (p) => p.dollars })}
       ${row('Times soaked', { v: (p) => p.soaks })}
     </table>
     <p style="opacity:.6;font-size:1.2cqw">sea #${seed}</p>
@@ -141,6 +143,12 @@ function handleEvents() {
         overlay.splash(e.x, e.y, 18);
         overlay.pop(e.x, e.y, e.lost > 0 ? 'SPLASH! −' + e.lost : 'SPLASH!', '#bfe6ff', true);
         sound.soak();
+        break;
+      case 'dollar': sound.sparkle(); break;
+      case 'collect':
+        overlay.pop(e.x, e.y, 'SAND DOLLAR +' + e.amount, '#ffe45c', true);
+        sound.collect();
+        cards[e.player].bumpT = 0.2;
         break;
       case 'splash': overlay.splash(e.x, e.y, 8); break;
       case 'end': showResults(); sound.fanfare(); timerEl.style.display = 'none'; break;

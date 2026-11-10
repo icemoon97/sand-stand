@@ -83,6 +83,10 @@ export class Sound {
     o.start(t); o.stop(t + 0.45);
   }
 
+  sparkle() { [1568, 2093, 2637].forEach((f, i) => this.note(f, i * 0.06, 0.25, 'sine', 0.07)); }
+
+  collect() { [784, 1046, 1318, 1568, 2093].forEach((f, i) => this.note(f, i * 0.055, 0.28, 'triangle', 0.13)); }
+
   beep(high) { this.note(high ? 880 : 440, 0, high ? 0.5 : 0.18, 'square', 0.08); }
 
   fanfare() { [523, 659, 784, 1046].forEach((f, i) => this.note(f, i * 0.12, 0.3)); }

@@ -6,6 +6,9 @@ Stand still on the sand to fill your pot. It fills faster the lower down the bea
 hold still. Step away to bank it; if the water reaches your feet first, the pot is lost and you are soaked for a
 couple of seconds.
 
+Three or four sand dollars wash up each round, glinting under a wave. The first player to reach one after the
+water has drained off it banks a bonus.
+
 ## Run
 
 ```bash

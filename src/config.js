@@ -64,4 +64,15 @@ export const CFG = {
     holdGain: 0.4, // hold multiplier = 1 + holdGain * seconds
     holdMax: 10, // s at which the hold multiplier stops growing
   },
+
+  dollars: {
+    min: 3, max: 4, // how many wash up per round
+    bonus: 300, // points, banked straight away
+    firstAt: 8, // s into the round before the first can appear
+    lastAt: 22, // s before the end after which none appear
+    zMin: 0.24, // band of beach height they can land in: above the resting
+    zMax: 0.45, // waterline, but low enough that waves cover it
+    minDepth: 0.05, // must be under at least this much water when it appears
+    radius: 0.5,
+  },
 };

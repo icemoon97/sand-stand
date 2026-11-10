@@ -2,6 +2,7 @@
 // per-player inputs, so it can later be driven by networked inputs unchanged.
 
 import { CFG } from './config.js';
+import { mulberry32 } from './rng.js';
 
 export const PLAYER_STYLES = [
   { name: 'P1', color: '#ff5a4d', dark: '#b8322a', keys: 'WASD' },
@@ -26,7 +27,7 @@ function makePlayer(i, n) {
     soaked: 0, // seconds left unable to score
     inWater: false,
     depthMult: 0, holdMult: 1,
-    soaks: 0, bestPot: 0,
+    soaks: 0, bestPot: 0, dollars: 0,
     stepAcc: 0, foot: 1,
   };
 }
@@ -40,6 +41,9 @@ export class Game {
     this.players = [];
     this.events = []; // drained by the presentation layer each frame
     this.footprints = [];
+    this.dollars = []; // sand dollars lying on the beach
+    this.dollarTimes = []; // round-clock times (s elapsed) at which the next ones wash up
+    this.rng = mulberry32(1);
     for (let i = 0; i < nPlayers; i++) this.players.push(makePlayer(i, nPlayers));
   }
 
@@ -48,6 +52,13 @@ export class Game {
     this.players = [];
     for (let i = 0; i < this.n; i++) this.players.push(makePlayer(i, this.n));
     this.footprints.length = 0;
+    this.dollars.length = 0;
+    this.rng = mulberry32((seed ^ 0x2545f491) >>> 0);
+    const d = CFG.dollars, r = this.rng;
+    const n = d.min + Math.floor(r() * (d.max - d.min + 1));
+    const span = CFG.game.roundTime - d.firstAt - d.lastAt;
+    this.dollarTimes = [];
+    for (let i = 0; i < n; i++) this.dollarTimes.push(d.firstAt + (i + r()) * span / n);
     this.phase = 'countdown';
     this.timer = CFG.game.countdown;
     this.events.push({ type: 'countdown', n: Math.ceil(this.timer) });
@@ -84,6 +95,7 @@ export class Game {
         this.events.push({ type: 'tickdown', n: Math.ceil(this.timer) });
       }
     }
+    if (this.phase === 'play') this.updateDollars(dt);
     const scoring = this.phase === 'play';
     const canMove = this.phase !== 'results';
     for (let i = 0; i < this.players.length; i++) {
@@ -95,6 +107,51 @@ export class Game {
       const f = fp[i];
       f.age += dt;
       if (f.age > 45 || this.sim.depthAt(f.x, f.y) > 0.006) { fp[i] = fp[fp.length - 1]; fp.pop(); }
+    }
+  }
+
+  // A sand dollar appears under the water of a wave that has run up the
+  // beach, in the band the swash regularly uncovers, so it can be fetched once
+  // the wave drains back.
+  trySpawnDollar() {
+    const d = CFG.dollars, sim = this.sim, W = CFG.world.W, H = CFG.world.H, r = this.rng;
+    const x = 2 + r() * (W - 4), pick = r();
+    let lo = -1, hi = -1; // extent of the usable, currently submerged stretch of this column
+    for (let y = H - 1; y > 2; y -= 0.25) {
+      const z = sim.bedAt(x, y);
+      if (z > d.zMax) continue;
+      if (z < d.zMin) break;
+      if (sim.depthAt(x, y) > d.minDepth) { if (hi < 0) hi = y; lo = y; }
+      else if (hi >= 0) break;
+    }
+    if (hi < 0 || hi - lo < 0.5) return false;
+    const y = lo + pick * (hi - lo - 0.25);
+    for (const o of this.dollars) if (Math.hypot(o.x - x, o.y - y) < 4) return false;
+    this.dollars.push({ x, y, age: 0, exposed: false, spin: r() * 6.283 });
+    this.events.push({ type: 'dollar', x, y });
+    return true;
+  }
+
+  updateDollars(dt) {
+    const g = CFG.game, d = CFG.dollars, elapsed = g.roundTime - this.timer;
+    if (this.dollarTimes.length && elapsed >= this.dollarTimes[0] && this.trySpawnDollar()) this.dollarTimes.shift();
+    const reach = g.playerRadius + d.radius;
+    for (let i = this.dollars.length - 1; i >= 0; i--) {
+      const o = this.dollars[i];
+      o.age += dt;
+      o.exposed = this.sim.depthAt(o.x, o.y) <= g.touchDepth;
+      if (!o.exposed) continue; // only up for grabs once the water has left it
+      let who = null, best = reach;
+      for (const p of this.players) {
+        const dist = Math.hypot(p.x - o.x, p.y - o.y);
+        if (dist < best) { best = dist; who = p; }
+      }
+      if (who) {
+        who.score += d.bonus;
+        who.dollars++;
+        this.events.push({ type: 'collect', player: who.id, amount: d.bonus, x: o.x, y: o.y });
+        this.dollars.splice(i, 1);
+      }
     }
   }
 
